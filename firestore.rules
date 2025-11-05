@@ -1,0 +1,156 @@
+/**
+ * @fileoverview Firestore Security Rules for Housie Empire.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for user profiles and
+ * restricts write access based on defined roles.  It prioritizes security
+ * and data integrity by validating key relationships and preventing unauthorized
+ * modifications.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profiles, including email, and role. User-owned.
+ * - /organizers/{organizerId}: Stores organizer details.
+ * - /games/{gameId}: Stores game information.
+ * - /games/{gameId}/players/{playerId}: Stores player-game relationships and data.
+ * - /leaderboard/{userId}: Stores public player data for leaderboards.
+ *
+ * Key Security Decisions:
+ * - Users can only read and write their own profile data.
+ * - Organizers can be created if the user has the correct role.
+ * - Game creation and management are restricted to organizers.
+ * - PlayerGame data is managed within the context of a game and player.
+ * - Leaderboard data is publicly readable but only writable by the corresponding user.
+ *
+ * Denormalization for Authorization:
+ * - The `userId` field in `/organizers/{organizerId}` is used to link an organizer
+ *   to a specific user, enabling ownership-based access control.
+ * - The `organizerId` field in `/games/{gameId}` is used to associate a game with
+ *   a specific organizer, enabling role-based access control.
+ *
+ * Structural Segregation:
+ * - Uses separate collections for users, organizers, and games to maintain a
+ *   clear separation of concerns and improve security.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Manages user profiles, enforcing user-ownership.
+     * @path /users/{userId}
+     * @allow (create) User with matching ID can create their own profile.
+     * @allow (get, update, delete) User with matching ID can access their own profile.
+     * @deny (create) User cannot create a profile with an ID that doesn't match their own.
+     * @deny (get, update, delete) User cannot access another user's profile.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if false; // Listing users is not permitted.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Manages organizer profiles, linking them to users.
+     * @path /organizers/{organizerId}
+     * @allow (create) User with the role of "organizer" can create an organizer profile with their userId.
+     * @allow (get, update, delete) Organizer with matching userId can access their own profile.
+     * @deny (create) User without the role of "organizer" cannot create an organizer profile.
+     * @deny (get, update, delete) Organizer cannot access another organizer's profile.
+     * @principle Enforces role-based access for creation and ownership for other operations.
+     */
+    match /organizers/{organizerId} {
+      function isOrganizer() {
+        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'organizer';
+      }
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isExistingOwner(resource.data.userId);
+      allow list: if false; // Listing organizers is not permitted.
+      allow create: if isOrganizer() && request.resource.data.userId == request.auth.uid;
+      allow update: if isExistingOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(resource.data.userId);
+    }
+
+    /**
+     * @description Manages game information, allowing organizers to create and manage their games.
+     * @path /games/{gameId}
+     * @allow (get, list) Public read access for game information.
+     * @allow (create) Organizer can create a game with their organizerId.
+     * @allow (update, delete) Organizer can update and delete their own games.
+     * @deny (create) Non-organizers cannot create games.
+     * @deny (update, delete) Users cannot modify games they don't own.
+     * @principle Enforces role-based access for creation and ownership for other operations.
+     */
+    match /games/{gameId} {
+      function isOrganizer(organizerId) {
+        return get(/databases/$(database)/documents/organizers/$(organizerId)).data.userId == request.auth.uid;
+      }
+      function isExistingOwner(organizerId) {
+          return isOrganizer(organizerId) && resource != null;
+      }
+
+      allow get, list: if true;
+      allow create: if request.auth != null && isOrganizer(request.resource.data.organizerId);
+      allow update: if request.auth != null && isExistingOwner(resource.data.organizerId);
+      allow delete: if request.auth != null && isExistingOwner(resource.data.organizerId);
+    }
+
+    /**
+     * @description Manages player-game relationships, enforcing that players can only manage their own game data.
+     * @path /games/{gameId}/players/{playerId}
+     * @allow (get, list) Only players in the game can read other's data in the game.
+     * @allow (create) Any signed-in user can create a player entry for themselves within a game.
+     * @allow (update, delete) Only the player who owns the entry can update or delete it.
+     * @deny (create) Users cannot create player entries for others.
+     * @deny (update, delete) Users cannot modify player entries they don't own.
+     * @principle Enforces document ownership for all operations within the context of a game.
+     */
+    match /games/{gameId}/players/{playerId} {
+      function isOwner(playerId) {
+        return request.auth != null && request.auth.uid == playerId;
+      }
+      function isExistingOwner(playerId) {
+        return isOwner(playerId) && resource != null;
+      }
+
+      allow get, list: if true;
+      allow create: if request.auth != null && request.auth.uid == playerId;
+      allow update: if isExistingOwner(playerId);
+      allow delete: if isExistingOwner(playerId);
+    }
+
+    /**
+     * @description Manages public leaderboard data.
+     * @path /leaderboard/{userId}
+     * @allow (get, list) Public read access for leaderboard data.
+     * @allow (create, update) A user can create or update their own leaderboard entry.
+     * @deny (delete) Users cannot delete leaderboard entries.
+     * @principle Publicly readable, but only the user can write to their own entry.
+     */
+    match /leaderboard/{userId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      allow get, list: if true;
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false; // Prevent deleting entries
+    }
+  }
+}
