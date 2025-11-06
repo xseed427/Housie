@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Housie Empire — Preview</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.7/dist/tailwind.min.css" rel="stylesheet">
+<style>
+  @keyframes glow {
+    0% { filter: drop-shadow(0 0 10px rgba(99,102,241,0.6)); transform: translateY(0); }
+    50% { filter: drop-shadow(0 0 30px rgba(139,92,246,0.9)); transform: translateY(-4px); }
+    100% { filter: drop-shadow(0 0 10px rgba(99,102,241,0.6)); transform: translateY(0); }
+  }
+  .neon-btn { background: linear-gradient(90deg,#7c3aed,#4f46e5); box-shadow: 0 6px 24px rgba(79,70,229,0.25); }
+  .neon-ghost { border: 1px solid rgba(255,255,255,0.08); }
+  .hero-orb { position: absolute; width: 420px; height: 420px; border-radius: 50%; filter: blur(60px); background: radial-gradient(circle at 30% 30%, rgba(99,102,241,0.18), rgba(124,58,237,0.12), rgba(14,165,233,0.02)); transform: translateZ(0); }
+  .cta-glow { animation: glow 3s ease-in-out infinite; }
+</style>
+</head>
+<body class="bg-gradient-to-br from-[#07060a] via-[#0b0620] to-[#10061e] text-white antialiased">
+  <header class="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-400 flex items-center justify-center text-xl font-bold shadow-xl">H</div>
+      <div class="text-2xl font-extrabold tracking-tight">Housie Empire</div>
+    </div>
+    <nav class="hidden md:flex items-center gap-8 text-sm font-medium">
+      <a href="#" class="hover:underline">Home</a>
+      <a href="#" class="hover:underline">About</a>
+      <a href="#" class="hover:underline">Contact</a>
+      <a href="/login" class="px-4 py-2 rounded-md bg-white text-[#0b1226] font-medium">Login</a>
+    </nav>
+  </header>
+
+  <main class="relative overflow-hidden">
+    <div class="hero-orb -right-32 -top-16"></div>
+    <div class="hero-orb -left-36 -bottom-20" style="background: radial-gradient(circle at 70% 70%, rgba(59,130,246,0.14), rgba(99,102,241,0.08), transparent)"></div>
+    <section class="max-w-7xl mx-auto px-6 py-16 lg:py-28 grid md:grid-cols-2 gap-12 items-center">
+      <div class="space-y-6">
+        <h1 class="text-4xl md:text-6xl font-extrabold leading-tight">
+          Play Housie. Win Big. <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">Live & Social</span>
+        </h1>
+        <p class="text-gray-300 max-w-xl">Join instant rooms, host secure games, and win real rewards. Housie Empire brings the classic tambola experience online with lightning-fast gameplay and a vibrant community.</p>
+
+        <div class="flex flex-wrap gap-4 mt-6">
+          <a href="/signup" class="neon-btn cta-glow inline-flex items-center gap-3 px-6 py-3 rounded-full text-sm font-semibold transform hover:scale-105 transition">Play Now <span class="text-xs opacity-80 ml-1">Quick match</span></a>
+          <a href="/organizer/invite" class="inline-flex items-center gap-3 px-6 py-3 rounded-full neon-ghost text-sm border border-white/10 hover:bg-white/5 transition">Become Organizer <span class="text-xs opacity-80 ml-1">Invite-only</span></a>
+        </div>
+
+        <div class="mt-8 grid grid-cols-2 gap-4 text-sm text-gray-300">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">★</div>
+            <div>
+              <div class="font-semibold">Trusted</div>
+              <div class="text-xs">Secure payments & verified hosts</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">⚡</div>
+            <div>
+              <div class="font-semibold">Fast</div>
+              <div class="text-xs">Low-latency game rooms</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="relative">
+        <div class="rounded-2xl p-6 bg-gradient-to-br from-white/3 to-white/6 backdrop-blur-md border border-white/5 shadow-2xl">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm text-gray-300">Live Room</div>
+              <div class="text-xl font-bold">Diwali Tambola Night</div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm text-gray-400">Players</div>
+              <div class="text-lg font-semibold">120</div>
+            </div>
+          </div>
+
+          <div class="mt-6 grid grid-cols-3 gap-2 text-center">
+            <div class="p-3 bg-white/5 rounded-md">₹10</div>
+            <div class="p-3 bg-white/5 rounded-md">₹20</div>
+            <div class="p-3 bg-white/5 rounded-md">₹50</div>
+          </div>
+
+          <div class="mt-6 flex items-center gap-3">
+            <a href="/game/preview" class="px-4 py-2 bg-indigo-600 rounded-md font-medium">Join</a>
+            <a href="/game/create" class="px-4 py-2 border border-gray-600 rounded-md">Watch</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-6 py-12">
+      <h2 class="text-2xl font-bold text-center mb-8">Features</h2>
+      <div class="grid md:grid-cols-4 gap-6">
+        <div class="p-6 rounded-xl bg-white/5 border border-white/5">
+          <div class="text-3xl mb-3">🎯</div>
+          <div class="font-semibold">Play Instantly</div>
+          <div class="text-sm mt-2 text-gray-300">Join or create rooms in seconds with one-click matching.</div>
+        </div>
+        <div class="p-6 rounded-xl bg-white/5 border border-white/5">
+          <div class="text-3xl mb-3">🔒</div>
+          <div class="font-semibold">Secure Hosting</div>
+          <div class="text-sm mt-2 text-gray-300">Organizers are invite-only and roles are verified by server.</div>
+        </div>
+        <div class="p-6 rounded-xl bg-white/5 border border-white/5">
+          <div class="text-3xl mb-3">🏆</div>
+          <div class="font-semibold">Win Rewards</div>
+          <div class="text-sm mt-2 text-gray-300">Fast payouts and transparent scoring.</div>
+        </div>
+        <div class="p-6 rounded-xl bg-white/5 border border-white/5">
+          <div class="text-3xl mb-3">⚡</div>
+          <div class="font-semibold">Lightning Fast</div>
+          <div class="text-sm mt-2 text-gray-300">Optimized for low-latency play on mobile and desktop.</div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="mt-16 border-t border-white/5">
+      <div class="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-400 flex items-center justify-center text-lg font-bold">H</div>
+          <div>
+            <div class="font-bold">Housie Empire</div>
+            <div class="text-sm text-gray-400">© 2025 Housie Empire. All rights reserved.</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <a href="/terms" class="text-sm text-gray-300 hover:underline">Terms</a>
+          <a href="/privacy" class="text-sm text-gray-300 hover:underline">Privacy</a>
+          <div class="flex items-center gap-3 pl-4 border-l border-white/5">
+            <a href="#" aria-label="twitter" class="text-gray-300">TW</a>
+            <a href="#" aria-label="instagram" class="text-gray-300">IG</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>
