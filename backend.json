@@ -1,0 +1,326 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user within the Housie Empire application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "description": "User's role within the application (e.g., owner, organizer, player)."
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "role"
+      ]
+    },
+    "Organizer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Organizer",
+      "type": "object",
+      "description": "Represents an organizer who can create and manage games.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the organizer."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:1 Organizer)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of the organizer."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Mobile phone number of the organizer."
+        },
+        "pan": {
+          "type": "string",
+          "description": "PAN (Permanent Account Number) of the organizer."
+        },
+        "aadhaar": {
+          "type": "string",
+          "description": "Last 4 digits of the organizer's Aadhaar number."
+        },
+        "bank": {
+          "type": "string",
+          "description": "Bank account number of the organizer."
+        },
+        "ifsc": {
+          "type": "string",
+          "description": "IFSC code of the organizer's bank."
+        },
+        "city": {
+          "type": "string",
+          "description": "City of the organizer."
+        },
+        "wallet": {
+          "type": "number",
+          "description": "The organizer's wallet balance."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name",
+        "phone",
+        "pan",
+        "aadhaar",
+        "bank",
+        "ifsc",
+        "city",
+        "wallet"
+      ]
+    },
+    "Game": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Game",
+      "type": "object",
+      "description": "Represents a Housie game.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the game."
+        },
+        "organizerId": {
+          "type": "string",
+          "description": "Reference to Organizer. (Relationship: Organizer 1:N Game)"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the game."
+        },
+        "code": {
+          "type": "string",
+          "description": "Unique code for players to join the game."
+        },
+        "ticketPrice": {
+          "type": "number",
+          "description": "Price of a ticket to play the game."
+        },
+        "hostCut": {
+          "type": "number",
+          "description": "Percentage cut for the host."
+        },
+        "pool": {
+          "type": "number",
+          "description": "Total prize pool for the game."
+        },
+        "players": {
+          "type": "number",
+          "description": "Number of players currently in the game."
+        },
+        "maxPlayers": {
+          "type": "number",
+          "description": "Maximum number of players allowed in the game."
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the game (e.g., waiting, live, ended)."
+        },
+        "called": {
+          "type": "array",
+          "description": "Array of numbers that have been called in the game.",
+          "items": {
+            "type": "number"
+          }
+        },
+        "prizes": {
+          "type": "string",
+          "description": "prize types with amounts"
+        },
+        "owner5": {
+          "type": "number",
+          "description": "The owner's 5% earnings from the game."
+        },
+        "host10": {
+          "type": "number",
+          "description": "The host's 10% earnings from the game."
+        }
+      },
+      "required": [
+        "id",
+        "organizerId",
+        "title",
+        "code",
+        "ticketPrice",
+        "hostCut",
+        "pool",
+        "players",
+        "maxPlayers",
+        "status",
+        "called",
+        "prizes",
+        "owner5",
+        "host10"
+      ]
+    },
+    "PlayerGame": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PlayerGame",
+      "type": "object",
+      "description": "Represents a Player participating in a Game",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the player in the game"
+        },
+        "gameId": {
+          "type": "string",
+          "description": "Reference to Game. (Relationship: Game 1:N PlayerGame)"
+        },
+        "ticket": {
+          "type": "array",
+          "description": "The ticket assigned to the player",
+          "items": {
+            "type": "string"
+          }
+        },
+        "paid": {
+          "type": "number",
+          "description": "Amount the player has paid to join the game."
+        }
+      },
+      "required": [
+        "id",
+        "gameId",
+        "ticket",
+        "paid"
+      ]
+    },
+    "LeaderboardEntry": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "LeaderboardEntry",
+      "type": "object",
+      "description": "Represents a player's entry on the leaderboard.",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The unique identifier for the user."
+        },
+        "name": {
+          "type": "string",
+          "description": "The player's display name."
+        },
+        "housiePoints": {
+          "type": "number",
+          "description": "The player's total Housie Points (HP)."
+        }
+      },
+      "required": [
+        "userId",
+        "name",
+        "housiePoints"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user information, including email and role. Uses path-based ownership for simplified security rules.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organizers/{organizerId}",
+        "definition": {
+          "entityName": "Organizer",
+          "schema": {
+            "$ref": "#/backend/entities/Organizer"
+          },
+          "description": "Stores organizer details, including KYC information. Related to the user document via the userId field.",
+          "params": [
+            {
+              "name": "organizerId",
+              "description": "The unique identifier for the organizer."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/games/{gameId}",
+        "definition": {
+          "entityName": "Game",
+          "schema": {
+            "$ref": "#/backend/entities/Game"
+          },
+          "description": "Stores game information, including organizerId. Enables listing and filtering games by organizer. Contains `owner5` and `host10` for earnings.",
+          "params": [
+            {
+              "name": "gameId",
+              "description": "The unique identifier for the game."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/games/{gameId}/players/{playerId}",
+        "definition": {
+          "entityName": "PlayerGame",
+          "schema": {
+            "$ref": "#/backend/entities/PlayerGame"
+          },
+          "description": "Stores player game data, including the ticket. This is a subcollection of games, defining the relationship between games and players.",
+          "params": [
+            {
+              "name": "gameId",
+              "description": "The unique identifier for the game."
+            },
+            {
+              "name": "playerId",
+              "description": "The unique identifier for the player within the game."
+            }
+          ]
+        }
+      },
+       {
+        "path": "/leaderboard/{userId}",
+        "definition": {
+          "entityName": "LeaderboardEntry",
+          "schema": {
+            "$ref": "#/backend/entities/LeaderboardEntry"
+          },
+          "description": "Stores public player data for the leaderboard, including name and Housie Points (HP).",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user, linking to their entry."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "This Firestore structure is designed to support the Housie Empire application, emphasizing security, scalability, and ease of debugging. The core principle is Authorization Independence, achieved through denormalization of authorization data, eliminating the need for `get()` calls in security rules. It ensures that each collection has a homogeneous security posture and leverages consistent access modeling patterns. The application data includes Users, Organizers, Games and PlayerGame.\n\nUsers are stored in the `/users/{userId}` collection, using path-based ownership. This implicitly grants the user ownership over their data. The email and role attributes are stored directly within the user document, which support the user request to store them. \n\nOrganizers are stored in the `/organizers/{organizerId}` collection and related to the user via the `userId` field. The organizer document stores KYC-related information.\n\nGames are stored in the `/games/{gameId}` collection. Each game document includes the `organizerId`. This enables filtering and listing games created by a specific organizer. The `owner5` and `host10` properties store earnings information.\n\nPlayerGame (player's participation in a game) are stored as a subcollection `/games/{gameId}/players/{playerId}`. This structure establishes the relationship between a game and its players. Each document contains a `ticket` field, as well as payment information. \n\n A new `leaderboard` collection at `/leaderboard/{userId}` is added to store public player data like name and Housie Points for efficient querying. This separation keeps sensitive user data private while making leaderboard data public and performant to read.\n\nThis design achieves Authorization Independence by avoiding hierarchical dependencies and storing authorization context directly within the documents that require it.  QAPs (Rules are not Filters) are achieved by using path-based ownership for user data and membership maps where appropriate. Security rules can efficiently validate access based on the presence and content of the local data, without needing to fetch parent documents."
+  }
+}
