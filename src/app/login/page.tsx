@@ -55,7 +55,7 @@ export default function UniversalLogin() {
       }
 
       const userData = userDoc.data();
-      const role = userData.role;
+      const role = "player";
 
       toast({
         title: "Login Successful!",

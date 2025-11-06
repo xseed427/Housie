@@ -67,22 +67,21 @@ export default function CreateGame() {
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="space-y-2">
-  <Label htmlFor="maxPlayers">Max Players</Label>
-  <Select name="maxPlayers" defaultValue="20" required>
-    <SelectTrigger id="maxPlayers">
-      <SelectValue placeholder="Select limit" />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="10">10</SelectItem>
-      <SelectItem value="20">20</SelectItem>
-      <SelectItem value="50">50</SelectItem>
-      <SelectItem value="100">100</SelectItem>
-      <SelectItem value="200">200</SelectItem>
-    </SelectContent>
-  </Select>
-</div>
-
+                 <div className="space-y-2">
+                    <Label htmlFor="maxPlayers">Max Players</Label>
+                    <Select name="maxPlayers" defaultValue="20" required>
+                        <SelectTrigger id="maxPlayers">
+                        <SelectValue placeholder="Select limit" />
+                        </Trigger>
+                        <SelectContent>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                        <SelectItem value="100">100</SelectItem>
+                        <SelectItem value="200">200</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
             <div className="space-y-3">
               <Label>Host Cut: <span className="font-bold text-primary">{hostCut}%</span></Label>
