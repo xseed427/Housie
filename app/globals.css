@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 🎨 GLOBAL THEME (Housie Empire dark gaming style) */
 @layer base {
   :root {
     --background: 240 10% 3.9%;
@@ -10,19 +11,19 @@
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 51 100% 50%;
-    --primary-foreground: 0 0% 7.1%;
+    --primary: 262 83% 57%;
+    --primary-foreground: 0 0% 98%;
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
-    --accent: 337 82% 51%;
+    --accent: 282 85% 58%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 51 100% 50%;
+    --ring: 262 83% 57%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -30,13 +31,51 @@
     --chart-5: 340 75% 55%;
     --radius: 0.5rem;
   }
+
+  /* 🌙 Dark mode values */
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 4.8% 12%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 262 83% 57%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 282 85% 58%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 262 83% 57%;
+  }
 }
 
 @layer base {
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground;
+    /* 🌈 Replace flat bg with dynamic gradient for Housie Empire */
+    @apply min-h-screen bg-gradient-to-br from-[#07060a] via-[#0b0620] to-[#10061e] text-foreground antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* 🧊 Utility: glass card & glow buttons */
+@layer components {
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl;
+  }
+
+  .btn-neon {
+    @apply bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold shadow-lg transition-transform transform hover:scale-105;
   }
 }
