@@ -49,12 +49,11 @@
 
 @layer components {
     .become-organizer-button {
-        @apply bg-slate-800/50 border-blue-500 text-white backdrop-blur-sm;
-        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+        @apply bg-slate-800/50 border-blue-500/50 text-white backdrop-blur-sm shadow-[0_0_15px_rgba(59,130,246,0)];
         transition: all 0.3s ease-in-out;
     }
     .become-organizer-button:hover {
         @apply bg-slate-700/60 border-blue-400;
-        box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.3);
+        box-shadow: 0 0 25px 3px rgba(59, 130, 246, 0.4);
     }
 }
