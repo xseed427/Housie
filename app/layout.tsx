@@ -1,30 +1,18 @@
-import type {Metadata} from 'next';
-import './globals.css';
-import { Toaster } from "@/components/ui/toaster"
-import { FirebaseClientProvider } from '@/firebase';
+"use client";
 
-export const metadata: Metadata = {
-  title: 'Housie Empire',
-  description: '₹25,000/night in your pocket',
+import "@/styles/globals.css";
+import React from "react";
+
+export const metadata = {
+  title: "Housie Empire",
+  description: "Play Housie. Win Big. Live & Social",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-body antialiased">
-        <FirebaseClientProvider>
-          {children}
-        </FirebaseClientProvider>
-        <Toaster />
+    <html lang="en">
+      <body>
+        {children}
       </body>
     </html>
   );

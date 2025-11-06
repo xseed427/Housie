@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global design tokens (dark theme) */
+:root{
+  --background: #07060a;
+  --foreground: #ffffff;
+  --muted-foreground: rgba(255,255,255,0.7);
+  --card: rgba(255,255,255,0.03);
+  --primary: 236 72% 54%;
+}
+
+/* Basic body reset to use theme */
+html,body,#root {
+  height: 100%;
+}
+body {
+  @apply bg-gradient-to-br from-[#07060a] via-[#0b0620] to-[#10061e] text-white antialiased;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Utility: glass card */
+.glass-card {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+/* CTA neon */
+.btn-neon {
+  background: linear-gradient(90deg,#7c3aed,#4f46e5);
+  box-shadow: 0 8px 30px rgba(79,70,229,0.18);
+  color: white;
+}
