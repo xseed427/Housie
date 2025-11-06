@@ -29,6 +29,7 @@ export default function OwnerLogin() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!auth) return;
     try {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       if (!userCredential.user.emailVerified) {

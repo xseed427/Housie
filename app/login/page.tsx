@@ -1,119 +1,314 @@
-"use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import Link from "next/link";
-import { useAuth, useFirestore } from "@/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+'use client';
 
-const formSchema = z.object({
-  email: z.string().email("Please enter a valid email address."),
-  password: z.string().min(6, "Password must be at least 6 characters."),
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+  updateProfile,
+} from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, ShieldCheck, Stethoscope, User, Eye, EyeOff } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { doctorSpecialties, vetSpecialties } from '@/lib/specialties';
+import { useAuth } from '@/contexts/auth-context';
+
+type Role = 'customer' | 'vendor' | 'superadmin';
+
+const baseSignUpSchema = z.object({
+  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
+  email: z.string().email({ message: 'Please enter a valid email.' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+  phone: z.string().min(10, { message: 'Please enter a valid phone number.' }),
 });
 
-export default function UniversalLogin() {
+const customerSignUpSchema = baseSignUpSchema;
+const superAdminSignUpSchema = baseSignUpSchema;
+
+const vendorSignUpSchema = baseSignUpSchema.extend({
+  vendorType: z.string().min(1, { message: 'Please select a vendor type.' }),
+  specialty: z.string().optional(),
+  experience: z.preprocess(
+    (val) => (val === '' ? undefined : Number(val)),
+    z.number().min(0, { message: "Experience cannot be negative." }).optional()
+  ),
+});
+
+const signInSchema = z.object({
+  email: z.string().email({ message: 'Please enter a valid email.' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+});
+
+const VENDOR_TYPES = ["Doctor", "Vet Doctor", "Pharmacy", "Retailer"];
+
+export default function LoginPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [role, setRole] = useState<Role>('customer');
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const auth = useAuth();
-  const firestore = useFirestore();
+  const { auth, db } = useAuth();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { email: "", password: "" },
+
+  const customerSignUpForm = useForm<z.infer<typeof customerSignUpSchema>>({
+    resolver: zodResolver(customerSignUpSchema),
+    defaultValues: { name: '', email: '', password: '', phone: '' },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const vendorSignUpForm = useForm<z.infer<typeof vendorSignUpSchema>>({
+    resolver: zodResolver(vendorSignUpSchema),
+    defaultValues: { name: '', email: '', password: '', phone: '', vendorType: '', specialty: '', experience: undefined },
+  });
+
+  const superAdminSignUpForm = useForm<z.infer<typeof superAdminSignUpSchema>>({
+    resolver: zodResolver(superAdminSignUpSchema),
+    defaultValues: { name: '', email: '', password: '', phone: '' },
+  });
+  
+  const signInForm = useForm<z.infer<typeof signInSchema>>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: { email: '', password: '' },
+  });
+  
+  const watchedVendorType = vendorSignUpForm.watch('vendorType');
+
+  const getSpecialties = () => {
+    switch (watchedVendorType) {
+      case 'Doctor':
+        return doctorSpecialties;
+      case 'Vet Doctor':
+        return vetSpecialties;
+      default:
+        return [];
+    }
+  };
+
+  const showSpecialtyAndExperience = watchedVendorType === 'Doctor' || watchedVendorType === 'Vet Doctor';
+
+
+  const handleSignUp = async (values: z.infer<typeof customerSignUpSchema> | z.infer<typeof vendorSignUpSchema> | z.infer<typeof superAdminSignUpSchema>) => {
+    setIsLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
-      const user = userCredential.user;
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      await updateProfile(userCredential.user, { displayName: values.name });
+      
+      // await sendEmailVerification(userCredential.user);
 
-      if (!user.emailVerified) {
-        await auth.signOut();
-        toast({
-          variant: "destructive",
-          title: "Email Not Verified",
-          description: "Please check your inbox and verify your email address before logging in.",
-        });
-        return;
+      const userData: any = {
+        uid: userCredential.user.uid,
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        role: role,
+        createdAt: new Date(),
+      };
+
+      if (role === 'vendor' && 'vendorType' in values) {
+        userData.vendorType = values.vendorType;
+        if (showSpecialtyAndExperience && values.specialty) {
+          userData.specialty = values.specialty;
+        }
+        if (showSpecialtyAndExperience && values.experience) {
+          userData.experience = values.experience;
+        }
       }
 
-      // Fetch user role from Firestore
-      const userDocRef = doc(firestore, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
+      await setDoc(doc(db, 'users', userCredential.user.uid), userData);
 
-      if (!userDoc.exists()) {
-        await auth.signOut();
-        throw new Error("User data not found. Please contact support.");
-      }
-
-      const userData = userDoc.data();
-      const role = userData.role;
-
-      toast({
-        title: "Login Successful!",
-        description: `Redirecting to your ${role} dashboard.`,
+      toast({ 
+        title: 'Account created successfully!',
+        description: 'You can now sign in with your new account.'
       });
-
-      // Redirect based on role
-      switch (role) {
-        case "owner":
-          router.push("/owner");
-          break;
-        case "organizer":
-          router.push("/organizer/dashboard");
-          break;
-        case "player":
-          router.push("/join");
-          break;
-        default:
-          router.push("/");
-          break;
-      }
-
+      router.push('/');
     } catch (error: any) {
-      console.error("Login Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: error.message || "Invalid email or password.",
-      });
+      console.error(error);
+      const errorMessage = error.message || "An unexpected error occurred.";
+      toast({ variant: 'destructive', title: 'Sign-up failed', description: errorMessage });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignIn = async (values: z.infer<typeof signInSchema>) => {
+    setIsLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, values.email, values.password);
+      toast({ title: 'Signed in successfully!' });
+      router.push('/');
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Sign-in failed', description: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const RoleButton = ({ value, children }: { value: Role, children: React.ReactNode }) => (
+    <Button 
+      variant={role === value ? 'default' : 'outline'}
+      onClick={() => setRole(value)}
+      className="flex-1"
+    >
+      {children}
+    </Button>
+  );
+
+  const PasswordField = ({ control, name, label = "Password" }: { control: any, name: string, label?: string }) => (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <div className="relative">
+            <FormControl>
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                {...field}
+              />
+            </FormControl>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          </div>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+
+  const getSignUpForm = () => {
+    switch (role) {
+      case 'customer':
+        return (
+          <Form {...customerSignUpForm}>
+            <form onSubmit={customerSignUpForm.handleSubmit(handleSignUp)} className="space-y-4">
+              <FormField control={customerSignUpForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Name</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={customerSignUpForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="you@example.com" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={customerSignUpForm.control} name="phone" render={({ field }) => (<FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input placeholder="123-456-7890" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <PasswordField control={customerSignUpForm.control} name="password" />
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create Account
+              </Button>
+            </form>
+          </Form>
+        );
+      case 'vendor':
+        return (
+          <Form {...vendorSignUpForm}>
+            <form onSubmit={vendorSignUpForm.handleSubmit(handleSignUp)} className="space-y-4">
+              <FormField control={vendorSignUpForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name / Business Name</FormLabel><FormControl><Input placeholder="e.g. Dr. Jane Smith or City Pharmacy" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={vendorSignUpForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="you@example.com" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={vendorSignUpForm.control} name="phone" render={({ field }) => (<FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input placeholder="123-456-7890" {...field} /></FormControl><FormMessage/></FormItem>)} />
+              <FormField control={vendorSignUpForm.control} name="vendorType" render={({ field }) => (<FormItem><FormLabel>Vendor Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select a vendor type" /></SelectTrigger></FormControl><SelectContent>{VENDOR_TYPES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
+              
+              {showSpecialtyAndExperience && (
+                <>
+                  <FormField control={vendorSignUpForm.control} name="specialty" render={({ field }) => (<FormItem><FormLabel>Specialty</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select a specialty" /></SelectTrigger></FormControl><SelectContent>{getSpecialties().map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
+                  <FormField control={vendorSignUpForm.control} name="experience" render={({ field }) => (<FormItem><FormLabel>Years of Experience</FormLabel><FormControl><Input type="number" placeholder="e.g., 5" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
+                </>
+              )}
+
+              <PasswordField control={vendorSignUpForm.control} name="password" />
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create Vendor Account
+              </Button>
+            </form>
+          </Form>
+        );
+      case 'superadmin':
+         return (
+           <Form {...superAdminSignUpForm}>
+             <form onSubmit={superAdminSignUpForm.handleSubmit(handleSignUp)} className="space-y-4">
+               <FormField control={superAdminSignUpForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Admin Name</FormLabel><FormControl><Input placeholder="Admin User" {...field} /></FormControl><FormMessage /></FormItem>)} />
+               <FormField control={superAdminSignUpForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Admin Email</FormLabel><FormControl><Input placeholder="admin@example.com" {...field} /></FormControl><FormMessage /></FormItem>)} />
+               <FormField control={superAdminSignUpForm.control} name="phone" render={({ field }) => (<FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input placeholder="123-456-7890" {...field} /></FormControl><FormMessage /></FormItem>)} />
+               <PasswordField control={superAdminSignUpForm.control} name="password" />
+               <Button type="submit" className="w-full" disabled={isLoading}>
+                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                 Create Admin Account
+               </Button>
+             </form>
+           </Form>
+         );
     }
   }
 
   return (
-    <main className="flex items-center justify-center min-h-screen py-8 bg-background">
-      <Card className="w-full max-w-sm mx-4">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
-          <CardDescription>Sign in to continue to Housie Empire</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField name="email" control={form.control} render={({ field }) => ( <FormItem><FormControl><Input type="email" placeholder="Email Address" {...field} /></FormControl><FormMessage /></FormItem> )} />
-              <FormField name="password" control={form.control} render={({ field }) => ( <FormItem><FormControl><Input type="password" placeholder="Password" {...field} /></FormControl><FormMessage /></FormItem> )} />
-              <Button type="submit" size="lg" className="w-full font-bold">LOGIN</Button>
-            </form>
-          </Form>
-          <div className="mt-4 text-center text-sm">
-            Don't have an account?{" "}
-            <Link href="/signup" className="underline text-primary">
-              Sign up
-            </Link>
-          </div>
-           <Button asChild variant="link" className="w-full text-muted-foreground mt-2">
-            <Link href="/">Back to Home</Link>
-          </Button>
-        </CardContent>
-      </Card>
-    </main>
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+      <div className="w-full max-w-md space-y-4">
+        <div className="flex gap-2">
+            <RoleButton value="customer"><User className="mr-2 h-4 w-4" /> Customer</RoleButton>
+            <RoleButton value="vendor"><Stethoscope className="mr-2 h-4 w-4" /> Vendor</RoleButton>
+            <RoleButton value="superadmin"><ShieldCheck className="mr-2 h-4 w-4" /> Admin</RoleButton>
+        </div>
+        <Tabs defaultValue="signin" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="signin">Sign In</TabsTrigger>
+            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          </TabsList>
+          <TabsContent value="signin">
+            <Card>
+              <CardHeader>
+                <CardTitle>Welcome Back!</CardTitle>
+                <CardDescription>Sign in to continue to your {role} account.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...signInForm}>
+                  <form onSubmit={signInForm.handleSubmit(handleSignIn)} className="space-y-4">
+                    <FormField
+                      control={signInForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl><Input placeholder="you@example.com" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <PasswordField control={signInForm.control} name="password" />
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Sign In
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="signup">
+            <Card>
+              <CardHeader>
+                <CardTitle>Create a {role} account</CardTitle>
+                <CardDescription>Enter your details to get started.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {getSignUpForm()}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
   );
 }

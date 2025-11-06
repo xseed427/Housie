@@ -61,7 +61,7 @@ export default function LeaderboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
+              {isLoading || !firestore ? (
                 Array.from({length: 5}).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell className="text-center"><Skeleton className="h-5 w-5 rounded-full mx-auto" /></TableCell>

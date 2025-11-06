@@ -35,6 +35,7 @@ export default function OrganizerSignUp() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!auth || !firestore) return;
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
